@@ -1,0 +1,10 @@
+[package]
+name = "auto_rmk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chrono = "0.4.38"
+eframe = "0.29.1"
+egui = "0.29.1"
+windows = { version = "*", default-features = false, features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_UI_WindowsAndMessaging"]}

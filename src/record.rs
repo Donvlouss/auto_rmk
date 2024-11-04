@@ -5,10 +5,13 @@ use std::{
 
 use windows::Win32::{
     Foundation::{HINSTANCE, LPARAM, LRESULT, WPARAM},
-    UI::WindowsAndMessaging::{
-        CallNextHookEx, PeekMessageW, SetWindowsHookExW, UnhookWindowsHookEx, HC_ACTION, HHOOK,
-        KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, PM_NOREMOVE, WH_KEYBOARD_LL, WH_MOUSE_LL, WM_KEYDOWN,
-        WM_KEYUP,
+    UI::{
+        Input::KeyboardAndMouse::VK_F2,
+        WindowsAndMessaging::{
+            CallNextHookEx, PeekMessageW, SetWindowsHookExW, UnhookWindowsHookEx, HC_ACTION, HHOOK,
+            KBDLLHOOKSTRUCT, MSG, MSLLHOOKSTRUCT, PM_NOREMOVE, WH_KEYBOARD_LL, WH_MOUSE_LL,
+            WM_KEYDOWN, WM_KEYUP,
+        },
     },
 };
 
@@ -18,9 +21,9 @@ static mut QUEUE: Vec<MKAction> = vec![];
 
 #[derive(Debug)]
 pub struct Record {
-    thread: Option<JoinHandle<()>>,
-    stop: Option<Arc<AtomicBool>>,
     hook: Vec<HHOOK>,
+    stop: Option<Arc<AtomicBool>>,
+    thread: Option<JoinHandle<()>>,
 }
 
 impl Record {
@@ -94,11 +97,13 @@ unsafe extern "system" fn hook_proc(n_code: i32, w_param: WPARAM, l_param: LPARA
             }));
         } else if w == WM_KEYDOWN || w == WM_KEYUP {
             let kb_struct = *(l_param.0 as *const KBDLLHOOKSTRUCT);
-            QUEUE.push(MKAction::Keyboard(Keyboard {
-                key: kb_struct.vkCode as u16,
-                down: w == WM_KEYDOWN,
-                timestamp: chrono::Utc::now().timestamp_subsec_millis(),
-            }));
+            if kb_struct.vkCode as u16 != VK_F2.0 {
+                QUEUE.push(MKAction::Keyboard(Keyboard {
+                    key: kb_struct.vkCode as u16,
+                    down: w == WM_KEYDOWN,
+                    timestamp: chrono::Utc::now().timestamp_subsec_millis(),
+                }));
+            }
         }
     }
     CallNextHookEx(None, n_code, w_param, l_param)

@@ -1,11 +1,15 @@
 use app::RmkApp;
+use global::GlobalKey;
 
 mod app;
 mod core;
+mod global;
 mod record;
 
 fn main() {
-    let app = RmkApp::new();
+    let mut global = GlobalKey::default();
+    let rx = global.start();
+    let app = RmkApp::new(rx);
 
     let mut native_options = eframe::NativeOptions::default();
     native_options.viewport = native_options
@@ -18,4 +22,5 @@ fn main() {
         Box::new(|_| Ok(Box::new(app))),
     )
     .unwrap();
+    global.stop();
 }
